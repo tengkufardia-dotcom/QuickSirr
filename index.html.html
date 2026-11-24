@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickSirr: Misteri Kegemilangan Kerajaan Abbasiyah</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Amiri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- MediaPipe Hands & Camera Utils CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --gold: #F59E0B;
+            --gold-bright: #FBBF24;
+            --emerald-dark: #042F2E;
+            --emerald: #10B981;
+            --midnight: #050B18;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--midnight);
+            color: #F8FAFC;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Corak Geometri Arabesque Halus */
+        .islamic-bg {
+            background-color: #050B18;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.16) 0%, transparent 55%),
+                radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.16) 0%, transparent 50%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.16) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg stroke='%23f59e0b' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M30 0l8.66 15H21.34L30 0zm0 60l8.66-15H21.34L30 60zM0 30l15-8.66v17.32L0 30zm60 0l-15-8.66v17.32L60 30zM15 15l15 5 15-5-5 15 5 15-15-5-15 5 5-15-5-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Kad Seni Bina Islam dengan Latar Belakang Lutsinar Elegan */
+        .abbasiyah-card {
+            background: linear-gradient(145deg, rgba(6, 24, 38, 0.84), rgba(4, 38, 36, 0.88));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.25s ease, background 0.25s ease;
+        }
+
+        /* Keadaan Hover / Jari Telunjuk Berada di Atas Kotak */
+        .abbasiyah-card.hovered {
+            transform: scale(1.03);
+            border-color: #FBBF24;
+            background: linear-gradient(145deg, rgba(16, 46, 68, 0.92), rgba(6, 64, 58, 0.94));
+            box-shadow: 0 0 28px rgba(251, 191, 36, 0.5), inset 0 0 14px rgba(251, 191, 36, 0.18);
+        }
+
+        /* Keadaan Jawapan BETUL: Hijau + Animasi Bercahaya (Glowing Pulse) */
+        .abbasiyah-card.correct-state {
+            border-color: #34D399 !important;
+            background: linear-gradient(145deg, rgba(6, 95, 70, 0.94), rgba(4, 120, 87, 0.96)) !important;
+            animation: correctGlowPulse 1.4s infinite alternate;
+            transform: scale(1.02);
+        }
+
+        @keyframes correctGlowPulse {
+            0% {
+                box-shadow: 0 0 18px rgba(16, 185, 129, 0.65), 0 0 32px rgba(52, 211, 153, 0.35), inset 0 0 12px rgba(167, 243, 208, 0.25);
+            }
+            100% {
+                box-shadow: 0 0 32px rgba(16, 185, 129, 0.95), 0 0 55px rgba(52, 211, 153, 0.65), inset 0 0 22px rgba(167, 243, 208, 0.45);
+            }
+        }
+
+        /* Keadaan Jawapan SALAH: Merah + Animasi Gegaran (Shake) */
+        .abbasiyah-card.wrong-state {
+            border-color: #F87171 !important;
+            background: linear-gradient(145deg, rgba(127, 29, 29, 0.94), rgba(153, 27, 27, 0.96)) !important;
+            box-shadow: 0 0 28px rgba(239, 68, 68, 0.7) !important;
+            animation: cardShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes cardShake {
+            10%, 90% { transform: translate3d(-3px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-7px, 0, 0); }
+            40%, 60% { transform: translate3d(7px, 0, 0); }
+        }
+
+        /* Kursor Jari Telunjuk Bercahaya + Gelang Kemajuan (Dwell Ring) */
+        #finger-cursor {
+            position: fixed;
+            width: 76px;
+            height: 76px;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .cursor-aura {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(253, 224, 71, 0.95) 0%, rgba(245, 158, 11, 0.5) 55%, transparent 78%);
+            box-shadow: 0 0 24px #FBBF24, 0 0 42px rgba(245, 158, 11, 0.6);
+            animation: auraPulse 1.5s infinite alternate;
+        }
+
+        @keyframes auraPulse {
+            from { transform: scale(0.92); opacity: 0.85; }
+            to { transform: scale(1.12); opacity: 1; }
+        }
+
+        .dwell-ring-circle {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.04s linear;
+        }
+
+        /* Suapan Video Webcam Cermin (Mirrored) */
+        .mirror-feed {
+            transform: scaleX(-1);
+        }
+
+        /* Animasi Muncul (Pop-In) */
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop-in {
+            animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Scrollbar Kemas */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(5, 11, 24, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.45); border-radius: 9999px; }
+    </style>
+</head>
+<body class="islamic-bg h-screen w-screen flex flex-col justify-between relative">
+
+    <!-- Video Webcam Tersembunyi untuk Pemprosesan MediaPipe -->
+    <video id="webcam_video" class="hidden" playsinline autoplay muted></video>
+
+    <!-- Paparan Latar Webcam Penuh (Mirrored) + Overlay Gelap Separa Lutsinar -->
+    <div id="webcam-backdrop" class="fixed inset-0 z-0 pointer-events-none hidden">
+        <canvas id="webcam_canvas" class="w-full h-full object-cover mirror-feed"></canvas>
+        <!-- Overlay Gelap Separa Lutsinar supaya teks & UI sentiasa jelas -->
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-950/45 to-slate-950/80"></div>
+    </div>
+
+    <!-- Kursor Jari Telunjuk Bercahaya + Gelang Kemajuan (1.5 Saat) -->
+    <div id="finger-cursor" class="hidden">
+        <div class="cursor-aura"></div>
+        <svg class="w-18 h-18 relative z-10" width="72" height="72" viewBox="0 0 72 72">
+            <!-- Trek Gelang -->
+            <circle cx="36" cy="36" r="29" stroke="rgba(255, 255, 255, 0.25)" stroke-width="4.5" fill="none" />
+            <!-- Kemajuan Dwell 1.5s -->
+            <circle id="dwell-progress-circle" class="dwell-ring-circle" cx="36" cy="36" r="29"
+                    stroke="#34D399" stroke-width="5" stroke-linecap="round" fill="none"
+                    stroke-dasharray="182.21" stroke-dashoffset="182.21" />
+        </svg>
+        <!-- Bintang Bercahaya di Tengah Kursor -->
+        <div class="absolute z-20 text-white drop-shadow-md">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L14.8 8.2L22 12L14.8 15.8L12 23L9.2 15.8L2 12L9.2 8.2L12 1Z"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- BAR ATAS (HEADER): IDENTITI QUICKSIRR & KAWALAN MOD -->
+    <!-- ===================================================================== -->
+    <header class="relative z-30 w-full px-4 py-2.5 sm:px-6 flex items-center justify-between border-b border-amber-500/25 bg-slate-950/75 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-emerald-500 flex items-center justify-center text-slate-950 font-extrabold shadow-lg shadow-amber-500/25">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-200 via-amber-400 to-emerald-300 bg-clip-text text-transparent">
+                        QuickSirr
+                    </h1>
+                    <span class="hidden sm:inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-500/40">
+                        Pendidikan Islam • Kerajaan Abbasiyah
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Kamera / Kawalan & Audio -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div id="status-pill" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/30 text-xs font-bold text-amber-200">
+                <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span id="status-text">Sedia Bermain</span>
+            </div>
+
+            <!-- Butang Tukar Mod Pantas (Kamera <-> Tetikus) -->
+            <button id="btn-toggle-input" onclick="switchInputMode()" title="Tukar Mod Kamera / Tetikus"
+                class="hidden px-3 py-1.5 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span class="hidden md:inline">Tukar Mod</span>
+            </button>
+
+            <!-- Butang Kawalan Audio -->
+            <button onclick="toggleMute()" title="Bisu / Bunyi"
+                class="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 text-amber-300 transition cursor-pointer">
+                <svg id="icon-audio-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+                <svg id="icon-audio-off" class="w-5 h-5 hidden text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- SKRIN 1: SKRIN MULA (START SCREEN) -->
+    <!-- ===================================================================== -->
+    <main id="screen-start" class="relative z-20 flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="max-w-3xl w-full abbasiyah-card rounded-3xl p-6 sm:p-10 text-center animate-pop-in">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold mb-4">
+                <span>🕌 Warisan Kegemilangan Tamadun Islam</span>
+                <span>•</span>
+                <span>Tingkatan 4 & 5</span>
+            </div>
+
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                Quick<span class="bg-gradient-to-r from-amber-300 via-amber-400 to-emerald-300 bg-clip-text text-transparent">Sirr</span>
+            </h2>
+            <p class="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto mb-6 leading-relaxed">
+                Uji ketangkasan minda dan penguasaan anda tentang sejarah <strong class="text-amber-300">Kerajaan Abbasiyah</strong>! Gunakan <strong class="text-emerald-300">hujung jari telunjuk</strong> di hadapan kamera untuk mengunci jawapan yang tepat.
+            </p>
+
+            <!-- Panduan Cara Bermain Menggunakan Jari Telunjuk -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-7 text-left">
+                <div class="p-4 rounded-2xl bg-slate-950/75 border border-amber-500/25">
+                    <div class="text-2xl mb-1.5">☝️</div>
+                    <h3 class="font-extrabold text-amber-300 text-sm">1. Halakan Jari Telunjuk</h3>
+                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">Angkat jari telunjuk di hadapan webcam untuk menggerakkan kursor cahaya ke kotak jawapan.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-950/75 border border-emerald-500/25">
+                    <div class="text-2xl mb-1.5">⏱️</div>
+                    <h3 class="font-extrabold text-emerald-300 text-sm">2. Tahan 1.5 Saat</h3>
+                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">Kekalkan jari pada kotak pilihan sehingga gelang kemajuan penuh untuk mengunci jawapan.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-950/75 border border-sky-500/25">
+                    <div class="text-2xl mb-1.5">✨</div>
+                    <h3 class="font-extrabold text-sky-300 text-sm">3. Pilih 1 atau 2 Jawapan</h3>
+                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">Perhatikan arahan soalan! Sesetengah soalan memerlukan <strong class="text-white">2 jawapan benar</strong> untuk mara.</p>
+                </div>
+            </div>
+
+            <!-- Kotak Maklum Balas Kamera -->
+            <div id="camera-alert-box" class="hidden mb-5 p-3.5 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs sm:text-sm">
+                Memulakan kamera web dan model AI MediaPipe Hands...
+            </div>
+
+            <!-- Butang Tindakan Utama -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button id="btn-launch-camera" onclick="initAndStart('camera')"
+                    class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-base sm:text-lg shadow-xl shadow-amber-500/30 transform hover:-translate-y-0.5 transition flex items-center justify-center gap-2.5 cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span>Mula & Aktifkan Kamera</span>
+                </button>
+
+                <button onclick="initAndStart('mouse')"
+                    class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-400/40 text-emerald-200 font-bold text-sm sm:text-base transition flex items-center justify-center gap-2 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+                    </svg>
+                    <span>Main Guna Tetikus (Sandaran)</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- SKRIN 2: ARENA PERMAINAN (RUANG TENGAH TERBUKA UNTUK WAJAH PEMAIN) -->
+    <!-- ===================================================================== -->
+    <section id="screen-game" class="hidden relative z-20 flex-1 flex flex-col justify-between p-3 sm:p-5 overflow-hidden">
+        
+        <!-- BAHAGIAN ATAS: PAPARAN SOALAN, SKOR & PENUNJUK BILANGAN JAWAPAN -->
+        <div class="max-w-5xl w-full mx-auto space-y-2.5">
+            <!-- Bar Maklumat Soalan & Skor -->
+            <div class="flex items-center justify-between px-4 py-2 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-amber-500/30 shadow-lg">
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-extrabold">
+                        Soalan <span id="hud-q-num">1</span> / 7
+                    </span>
+                    <span id="hud-req-badge" class="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-extrabold flex items-center gap-1.5">
+                        <span>🎯</span>
+                        <span id="hud-req-text">Pilih 2 jawapan yang betul</span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-bold block leading-none">Skor</span>
+                        <span id="hud-score" class="text-xl sm:text-2xl font-extrabold text-amber-400 leading-tight">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kotak Soalan Utama -->
+            <div class="abbasiyah-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-center border-amber-400/45 shadow-2xl">
+                <h2 id="question-title" class="text-base sm:text-xl md:text-2xl font-extrabold text-white leading-snug">
+                    Memuatkan soalan...
+                </h2>
+                <!-- Penunjuk Kemajuan Pilihan (Untuk Soalan 2 Jawapan) -->
+                <div id="multi-progress-dots" class="mt-2.5 flex items-center justify-center gap-2">
+                    <!-- Dijana secara dinamik -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RUANG TENGAH TERBUKA: MEMBIARKAN WAJAH PEMAIN DI WEBCAM JELAS KELIHATAN -->
+        <div class="flex-1 flex items-center justify-center pointer-events-none my-1">
+            <!-- Mesej Maklum Balas Terapung Ringkas (Tepat / Cuba Lagi) -->
+            <div id="floating-feedback" class="hidden px-6 py-2.5 rounded-full bg-slate-950/85 border border-amber-400/50 text-base sm:text-lg font-extrabold shadow-2xl animate-pop-in">
+                ✨ Tepat! Cari 1 lagi jawapan benar!
+            </div>
+        </div>
+
+        <!-- BAHAGIAN BAWAH: 4 KOTAK PILIHAN JAWAPAN (A, B, C, D) SERENTAK -->
+        <div id="answers-container" class="max-w-6xl w-full mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pb-1">
+            <!-- Pilihan A -->
+            <div id="card-0" data-idx="0" class="answer-box abbasiyah-card rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative overflow-hidden">
+                <div class="badge-letter w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-lg sm:text-xl flex items-center justify-center shrink-0 shadow-md">
+                    A
+                </div>
+                <div class="answer-label flex-1 text-sm sm:text-base md:text-lg font-bold text-slate-100 leading-snug text-left">
+                    Pilihan A
+                </div>
+                <div class="status-icon text-2xl shrink-0 hidden"></div>
+                <div class="box-progress-bar absolute bottom-0 left-0 h-1.5 bg-emerald-400 transition-all duration-75" style="width: 0%"></div>
+            </div>
+
+            <!-- Pilihan B -->
+            <div id="card-1" data-idx="1" class="answer-box abbasiyah-card rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative overflow-hidden">
+                <div class="badge-letter w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-lg sm:text-xl flex items-center justify-center shrink-0 shadow-md">
+                    B
+                </div>
+                <div class="answer-label flex-1 text-sm sm:text-base md:text-lg font-bold text-slate-100 leading-snug text-left">
+                    Pilihan B
+                </div>
+                <div class="status-icon text-2xl shrink-0 hidden"></div>
+                <div class="box-progress-bar absolute bottom-0 left-0 h-1.5 bg-emerald-400 transition-all duration-75" style="width: 0%"></div>
+            </div>
+
+            <!-- Pilihan C -->
+            <div id="card-2" data-idx="2" class="answer-box abbasiyah-card rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative overflow-hidden">
+                <div class="badge-letter w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-lg sm:text-xl flex items-center justify-center shrink-0 shadow-md">
+                    C
+                </div>
+                <div class="answer-label flex-1 text-sm sm:text-base md:text-lg font-bold text-slate-100 leading-snug text-left">
+                    Pilihan C
+                </div>
+                <div class="status-icon text-2xl shrink-0 hidden"></div>
+                <div class="box-progress-bar absolute bottom-0 left-0 h-1.5 bg-emerald-400 transition-all duration-75" style="width: 0%"></div>
+            </div>
+
+            <!-- Pilihan D -->
+            <div id="card-3" data-idx="3" class="answer-box abbasiyah-card rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative overflow-hidden">
+                <div class="badge-letter w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-lg sm:text-xl flex items-center justify-center shrink-0 shadow-md">
+                    D
+                </div>
+                <div class="answer-label flex-1 text-sm sm:text-base md:text-lg font-bold text-slate-100 leading-snug text-left">
+                    Pilihan D
+                </div>
+                <div class="status-icon text-2xl shrink-0 hidden"></div>
+                <div class="box-progress-bar absolute bottom-0 left-0 h-1.5 bg-emerald-400 transition-all duration-75" style="width: 0%"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SKRIN 3: SKRIN TAMAT PERMAINAN & NOTA ULANG KAJI -->
+    <!-- ===================================================================== -->
+    <section id="screen-end" class="hidden relative z-30 flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="max-w-4xl w-full abbasiyah-card rounded-3xl p-6 sm:p-8 text-center animate-pop-in my-auto">
+            <div class="inline-block px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider mb-2">
+                Tamat Misi • Kerajaan Abbasiyah
+            </div>
+
+            <h2 id="end-rank-title" class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-amber-200 via-amber-400 to-emerald-300 bg-clip-text text-transparent mb-1">
+                Cendekiawan Baitul Hikmah
+            </h2>
+            <p id="end-rank-desc" class="text-slate-300 text-sm sm:text-base mb-6">
+                Tahniah! Anda berjaya merungkai khazanah ilmu dan sumbangan khalifah Kerajaan Abbasiyah.
+            </p>
+
+            <!-- Kad Statistik Skor & Ketepatan -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-w-2xl mx-auto mb-6">
+                <div class="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/30">
+                    <div class="text-xs text-slate-400 font-bold uppercase">Jumlah Skor</div>
+                    <div id="end-total-score" class="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1">0</div>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30">
+                    <div class="text-xs text-slate-400 font-bold uppercase">Ketepatan</div>
+                    <div id="end-accuracy" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">100%</div>
+                </div>
+                <div class="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-slate-950/80 border border-sky-500/30">
+                    <div class="text-xs text-slate-400 font-bold uppercase">Jawapan Benar</div>
+                    <div id="end-correct-ratio" class="text-2xl sm:text-3xl font-extrabold text-sky-400 mt-1">12 / 12</div>
+                </div>
+            </div>
+
+            <!-- Senarai Ringkas Nota Ulang Kaji Semua 7 Soalan -->
+            <div class="text-left mb-6">
+                <h3 class="text-sm font-extrabold text-amber-300 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                    <span>📜 Nota Ulang Kaji Pantas (7 Soalan Kerajaan Abbasiyah)</span>
+                </h3>
+                <div id="revision-notes-list" class="max-h-60 overflow-y-auto space-y-2.5 pr-1">
+                    <!-- Dijana secara automatik -->
+                </div>
+            </div>
+
+            <!-- Butang Main Semula -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button onclick="restartGame()"
+                    class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-base shadow-xl shadow-amber-500/25 transition cursor-pointer">
+                    🔄 Main Semula
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- LOGIK PERMAINAN, MEDIAPIPE HANDS & WEB AUDIO API -->
+    <!-- ===================================================================== -->
+    <script>
+        /**
+         * 7 SOALAN TEPAT MENGIKUT SPESIFIKASI KURIKULUM PENDIDIKAN ISLAM
+         * Subtopik: Kerajaan Abbasiyah
+         */
+        const QUESTIONS_DATA = [
+            {
+                id: 1,
+                question: "Apakah sumbangan Abu Abdullah Al-Abbas bin Muhammad?",
+                requiredCount: 2,
+                options: [
+                    "Memindahkan pusat pemerintahan ke Baghdad.",
+                    "Menstabilkan keamanan dengan mematahkan pemberontakan Syiah dan Khawarij.",
+                    "Mengasaskan Kerajaan Abbasiyah.",
+                    "Membina Perpustakaan Agung bernama Baitul Hikmah."
+                ],
+                correctIndices: [1, 2] // b dan c
+            },
+            {
+                id: 2,
+                question: "Apakah nama khalifah kedua?",
+                requiredCount: 1,
+                options: [
+                    "Harun Ar-Rasyid bin Muhammad al-Mahdi.",
+                    "Abu Jaafar Abdullah bin Muhammad.",
+                    "Abu Al-Abbas Abdullah bin Muhammad.",
+                    "Abu Jaafar Abdullah Al-Makmun bin Harun Ar-Rasyid."
+                ],
+                correctIndices: [1] // b
+            },
+            {
+                id: 3,
+                question: "Apakah sumbangan Harun Ar-Rasyid?",
+                requiredCount: 2,
+                options: [
+                    "Perkemaskan cukai berpandukan kitab Kharaj.",
+                    "Menjadikan Baitul Hikmah Pusat Penterjemahan Negara.",
+                    "Membina perpustakaan Agung yang dikenali sebagai Baitul Hikmah.",
+                    "Membina Masjid Syarqiyyah."
+                ],
+                correctIndices: [0, 2] // a dan c
+            },
+            {
+                id: 4,
+                question: "Apakah nama khalifah yang mengarahkan terjemahkan karya asing dan menjadikan Baitul Hikmah sebagai pusat Terjemahan Negara?",
+                requiredCount: 1,
+                options: [
+                    "Khalifah Abu Al-Abbas Abdullah.",
+                    "Khalifah Abu Jaafar Abdullah.",
+                    "Harun Ar-Rasyid.",
+                    "Abu Jaafar Abdullah Al-Makmun."
+                ],
+                correctIndices: [3] // d
+            },
+            {
+                id: 5,
+                question: "Apakah sumbangan lain Abu Jaafar Abdullah bin Muhammad selain membina masjid Syarqiyyah?",
+                requiredCount: 2,
+                options: [
+                    "Membina Hospital.",
+                    "Membina Balai Cerap.",
+                    "Membina saliran dan pengairan.",
+                    "Membina Pusat Pengajian."
+                ],
+                correctIndices: [0, 2] // a dan c
+            },
+            {
+                id: 6,
+                question: "Apakah sumbangan lain Khalifah Harun Ar-Rasyid selain membina Baitul Hikmah?",
+                requiredCount: 2,
+                options: [
+                    "Memberi biasiswa kepada pelajar cemerlang.",
+                    "Memindahkan pusat pemerintahan ke Baghdad.",
+                    "Mewujudkan jawatan Ketua Hakim Negara.",
+                    "Membina Pusat Pengajian."
+                ],
+                correctIndices: [2, 3] // c dan d
+            },
+            {
+                id: 7,
+                question: "Apakah sumbangan Abu Jaafar Abdullah Al-Makmun selain mengarahkan terjemahan karya asing?",
+                requiredCount: 2,
+                options: [
+                    "Membina balai cerap untuk penyelidikan.",
+                    "Memberi kemudahan asas kepada rakyat.",
+                    "Membina hospital.",
+                    "Memberi biasiswa kepada pelajar cemerlang."
+                ],
+                correctIndices: [0, 3] // a dan d
+            }
+        ];
+
+        /**
+         * SINTESIS KESAN BUNYI (WEB AUDIO API - TANPA PAUTAN LUAR)
+         */
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = false;
+            }
+
+            ensureContext() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, volume = 0.16, delay = 0) {
+                if (this.isMuted) return;
+                this.ensureContext();
+                const now = this.ctx.currentTime + delay;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(volume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            }
+
+            // Bunyi detik lembut semasa jari menyentuh kotak
+            playHoverStart() {
+                this.playTone(587.33, 'sine', 0.08, 0.06, 0); // D5
+            }
+
+            // Bunyi kejayaan harmoni (ding/chime) apabila jawapan BETUL
+            playSuccessChime() {
+                this.playTone(523.25, 'sine', 0.22, 0.18, 0);      // C5
+                this.playTone(659.25, 'sine', 0.24, 0.18, 0.08);   // E5
+                this.playTone(783.99, 'sine', 0.32, 0.18, 0.16);   // G5
+                this.playTone(1046.50, 'triangle', 0.5, 0.16, 0.24); // C6
+            }
+
+            // Bunyi amaran lembut (buzz) apabila jawapan SALAH
+            playErrorBuzz() {
+                this.playTone(190, 'sawtooth', 0.22, 0.14, 0);
+                this.playTone(145, 'sawtooth', 0.32, 0.14, 0.12);
+            }
+
+            // Bunyi tamat permainan
+            playVictoryFanfare() {
+                this.playTone(440, 'triangle', 0.2, 0.15, 0);
+                this.playTone(554.37, 'triangle', 0.2, 0.15, 0.14);
+                this.playTone(659.25, 'triangle', 0.25, 0.16, 0.28);
+                this.playTone(880, 'sine', 0.6, 0.2, 0.42);
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        /**
+         * KEADAAN PERMAINAN (GAME STATE)
+         */
+        const state = {
+            inputMode: 'mouse', // 'camera' atau 'mouse'
+            isPlaying: false,
+            isTransitioning: false,
+            currentQIndex: 0,
+            score: 0,
+            totalCorrectHits: 0,
+            totalWrongAttempts: 0,
+            foundCorrectInCurrentQ: new Set(),
+            wrongTriedInCurrentQ: new Set(),
+            // Kursor & Gelang Kemajuan (Dwell 1.5 Saat)
+            cursorX: window.innerWidth / 2,
+            cursorY: window.innerHeight / 2,
+            handDetected: false,
+            hoveredIdx: -1,
+            dwellElapsedMs: 0,
+            dwellRequiredMs: 1500, // 1.5 saat untuk mengunci pilihan
+            lastTimestamp: performance.now()
+        };
+
+        let handsModel = null;
+        let cameraUtil = null;
+        let webcamInitialized = false;
+
+        const cursorEl = document.getElementById('finger-cursor');
+        const dwellCircleEl = document.getElementById('dwell-progress-circle');
+        const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 29; // ~182.21
+
+        /**
+         * KAWALAN AUDIO BISU / BUNYI
+         */
+        function toggleMute() {
+            audio.isMuted = !audio.isMuted;
+            document.getElementById('icon-audio-on').classList.toggle('hidden', audio.isMuted);
+            document.getElementById('icon-audio-off').classList.toggle('hidden', !audio.isMuted);
+            if (!audio.isMuted) audio.playHoverStart();
+        }
+
+        /**
+         * MULAKAN PERMAINAN DENGAN MOD KAMERA ATAU TETIKUS
+         */
+        async function initAndStart(mode) {
+            audio.ensureContext();
+            audio.playHoverStart();
+
+            const alertBox = document.getElementById('camera-alert-box');
+            const btnCam = document.getElementById('btn-launch-camera');
+
+            if (mode === 'camera') {
+                alertBox.classList.remove('hidden');
+                alertBox.className = "mb-5 p-3.5 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs sm:text-sm";
+                alertBox.innerHTML = "⏳ <strong>Mengaktifkan Webcam & Penjejak Jari MediaPipe...</strong> Sila benarkan akses kamera pada pelayar anda.";
+                btnCam.disabled = true;
+                btnCam.classList.add('opacity-60');
+
+                try {
+                    await setupMediaPipeWebcam();
+                    state.inputMode = 'camera';
+                    updateStatusPill('Kamera Jari AI Aktif', 'bg-emerald-400');
+                    document.getElementById('webcam-backdrop').classList.remove('hidden');
+                    beginGameSession();
+                } catch (error) {
+                    console.warn("Akses kamera gagal, beralih ke mod tetikus:", error);
+                    alertBox.className = "mb-5 p-3.5 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs sm:text-sm";
+                    alertBox.innerHTML = "⚠️ <strong>Kamera tidak dikesan atau kebenaran ditolak.</strong> Beralih ke <em>Mod Tetikus (Sandaran)</em> secara automatik...";
+                    setTimeout(() => {
+                        state.inputMode = 'mouse';
+                        updateStatusPill('Mod Tetikus Aktif', 'bg-sky-400');
+                        document.getElementById('webcam-backdrop').classList.add('hidden');
+                        beginGameSession();
+                    }, 1800);
+                } finally {
+                    btnCam.disabled = false;
+                    btnCam.classList.remove('opacity-60');
+                }
+            } else {
+                state.inputMode = 'mouse';
+                updateStatusPill('Mod Tetikus Aktif', 'bg-sky-400');
+                document.getElementById('webcam-backdrop').classList.add('hidden');
+                beginGameSession();
+            }
+        }
+
+        function updateStatusPill(text, dotColor) {
+            document.getElementById('status-text').textContent = text;
+            document.getElementById('status-dot').className = `w-2.5 h-2.5 rounded-full ${dotColor}`;
+        }
+
+        /**
+         * TUKAR MOD KAWALAN SEMASA BERMAIN
+         */
+        async function switchInputMode() {
+            audio.playHoverStart();
+            if (state.inputMode === 'mouse') {
+                await initAndStart('camera');
+            } else {
+                state.inputMode = 'mouse';
+                updateStatusPill('Mod Tetikus Aktif', 'bg-sky-400');
+                document.getElementById('webcam-backdrop').classList.add('hidden');
+                cursorEl.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * INISIALISASI WEBCAM & MEDIAPIPE HANDS (LANDMARK INDEKS 8)
+         */
+        async function setupMediaPipeWebcam() {
+            if (webcamInitialized && cameraUtil) return;
+
+            const videoEl = document.getElementById('webcam_video');
+            const canvasEl = document.getElementById('webcam_canvas');
+            const ctx = canvasEl.getContext('2d');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Pelayar tidak menyokong webcam.");
+            }
+
+            // Minta kebenaran kamera dahulu
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+                audio: false
+            });
+            videoEl.srcObject = stream;
+
+            handsModel = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            handsModel.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.65,
+                minTrackingConfidence: 0.6
+            });
+
+            handsModel.onResults((results) => {
+                // Pastikan saiz kanvas latar sepadan dengan skrin
+                if (canvasEl.width !== window.innerWidth || canvasEl.height !== window.innerHeight) {
+                    canvasEl.width = window.innerWidth;
+                    canvasEl.height = window.innerHeight;
+                }
+
+                ctx.save();
+                ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                
+                // Lukis paparan webcam secara proporsional (cover)
+                drawVideoCover(ctx, results.image, canvasEl.width, canvasEl.height);
+
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    const landmarks = results.multiHandLandmarks[0];
+                    state.handDetected = true;
+
+                    // Lukis rangka tangan halus berunsur emas & zamrud
+                    drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: 'rgba(245, 158, 11, 0.55)', lineWidth: 2.5 });
+                    drawLandmarks(ctx, landmarks, { color: '#34D399', lineWidth: 1, radius: 3 });
+
+                    if (state.inputMode === 'camera') {
+                        // Landmark Indeks 8 = Hujung Jari Telunjuk (Index Finger Tip)
+                        const indexFingerTip = landmarks[8];
+
+                        // Peta koordinat cermin (1 - x) supaya selari dengan paparan video mirrored
+                        const mappedPos = mapNormalizedToScreenCover(
+                            1 - indexFingerTip.x,
+                            indexFingerTip.y,
+                            results.image.width || 1280,
+                            results.image.height || 720,
+                            window.innerWidth,
+                            window.innerHeight
+                        );
+
+                        // Pelicinan pergerakan kursor (Smoothing)
+                        state.cursorX += (mappedPos.x - state.cursorX) * 0.45;
+                        state.cursorY += (mappedPos.y - state.cursorY) * 0.45;
+
+                        updateStatusPill('Jari Telunjuk Dikesan ✨', 'bg-emerald-400');
+                    }
+                } else {
+                    state.handDetected = false;
+                    if (state.inputMode === 'camera') {
+                        updateStatusPill('Angkat Jari Telunjuk...', 'bg-amber-400 animate-pulse');
+                    }
+                }
+                ctx.restore();
+            });
+
+            cameraUtil = new Camera(videoEl, {
+                onFrame: async () => {
+                    await handsModel.send({ image: videoEl });
+                },
+                width: 1280,
+                height: 720
+            });
+
+            await cameraUtil.start();
+            webcamInitialized = true;
+        }
+
+        /**
+         * HELPER: LUKIS VIDEO COVER SUPAYA TIDAK PENYEK PADA PELBAGAI NISBAH SKRIN
+         */
+        function drawVideoCover(ctx, img, canvasW, canvasH) {
+            const imgW = img.width || 1280;
+            const imgH = img.height || 720;
+            const scale = Math.max(canvasW / imgW, canvasH / imgH);
+            const drawW = imgW * scale;
+            const drawH = imgH * scale;
+            const offsetX = (canvasW - drawW) / 2;
+            const offsetY = (canvasH - drawH) / 2;
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        }
+
+        /**
+         * HELPER: SELARI KOORDINAT JARI DENGAN PAPARAN VIDEO COVER
+         */
+        function mapNormalizedToScreenCover(normX, normY, imgW, imgH, screenW, screenH) {
+            const scale = Math.max(screenW / imgW, screenH / imgH);
+            const drawW = imgW * scale;
+            const drawH = imgH * scale;
+            const offsetX = (screenW - drawW) / 2;
+            const offsetY = (screenH - drawH) / 2;
+            return {
+                x: Math.max(0, Math.min(screenW, normX * drawW + offsetX)),
+                y: Math.max(0, Math.min(screenH, normY * drawH + offsetY))
+            };
+        }
+
+        /**
+         * PENDENGAR TETIKUS (MOUSE FALLBACK)
+         */
+        window.addEventListener('mousemove', (e) => {
+            if (state.inputMode === 'mouse') {
+                state.cursorX = e.clientX;
+                state.cursorY = e.clientY;
+                state.handDetected = true;
+            }
+        });
+
+        // Klik terus pada kotak jawapan dalam mod tetikus jika pengguna tidak mahu menunggu 1.5s
+        document.querySelectorAll('.answer-box').forEach((box) => {
+            box.addEventListener('click', () => {
+                if (state.inputMode === 'mouse' && state.isPlaying && !state.isTransitioning) {
+                    const idx = parseInt(box.getAttribute('data-idx'), 10);
+                    evaluateAnswerSelection(idx);
+                }
+            });
+        });
+
+        /**
+         * MULAKAN SESI PERMAINAN BARU
+         */
+        function beginGameSession() {
+            state.isPlaying = true;
+            state.isTransitioning = false;
+            state.currentQIndex = 0;
+            state.score = 0;
+            state.totalCorrectHits = 0;
+            state.totalWrongAttempts = 0;
+
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-end').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('btn-toggle-input').classList.remove('hidden');
+            cursorEl.classList.remove('hidden');
+
+            updateScoreDisplay();
+            loadQuestion(0);
+
+            state.lastTimestamp = performance.now();
+            requestAnimationFrame(gameInteractionLoop);
+        }
+
+        function restartGame() {
+            audio.playHoverStart();
+            beginGameSession();
+        }
+
+        /**
+         * MUATKAN SOALAN KE SKRIN
+         */
+        function loadQuestion(index) {
+            const qObj = QUESTIONS_DATA[index];
+            state.foundCorrectInCurrentQ.clear();
+            state.wrongTriedInCurrentQ.clear();
+            state.hoveredIdx = -1;
+            state.dwellElapsedMs = 0;
+            state.isTransitioning = false;
+
+            // Kemas kini HUD
+            document.getElementById('hud-q-num').textContent = index + 1;
+            document.getElementById('question-title').textContent = qObj.question;
+
+            const reqText = qObj.requiredCount === 2 
+                ? "Pilih 2 jawapan yang betul" 
+                : "Pilih 1 jawapan yang betul";
+            document.getElementById('hud-req-text').textContent = reqText;
+
+            // Kemas kini titik kemajuan pilihan untuk soalan ini
+            renderMultiProgressDots(qObj.requiredCount, 0);
+
+            // Sembunyikan mesej terapung
+            const floatMsg = document.getElementById('floating-feedback');
+            floatMsg.classList.add('hidden');
+
+            // Tetapkan semula keempat-empat kotak pilihan (A, B, C, D)
+            const letters = ['A', 'B', 'C', 'D'];
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`card-${i}`);
+                card.className = "answer-box abbasiyah-card rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 cursor-pointer relative overflow-hidden";
+                card.querySelector('.badge-letter').textContent = letters[i];
+                card.querySelector('.answer-label').textContent = qObj.options[i];
+                
+                const statusIcon = card.querySelector('.status-icon');
+                statusIcon.classList.add('hidden');
+                statusIcon.textContent = '';
+
+                const bar = card.querySelector('.box-progress-bar');
+                bar.style.width = '0%';
+            }
+        }
+
+        function renderMultiProgressDots(totalRequired, foundCount) {
+            const container = document.getElementById('multi-progress-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < totalRequired; i++) {
+                const isDone = i < foundCount;
+                const dot = document.createElement('span');
+                dot.className = isDone
+                    ? "px-3 py-0.5 rounded-full bg-emerald-500/30 border border-emerald-400 text-emerald-200 text-xs font-bold flex items-center gap-1"
+                    : "px-3 py-0.5 rounded-full bg-slate-900/80 border border-slate-600 text-slate-400 text-xs font-semibold";
+                dot.innerHTML = isDone ? `✓ Jawapan ${i + 1} Ditemui` : `○ Jawapan ${i + 1}`;
+                container.appendChild(dot);
+            }
+        }
+
+        /**
+         * GELUNG INTERAKSI MASA NYATA (PENJEJAKAN JARI & DWELL TIMER 1.5 SAAT)
+         */
+        function gameInteractionLoop(now) {
+            if (!state.isPlaying) return;
+
+            const deltaMs = now - state.lastTimestamp;
+            state.lastTimestamp = now;
+
+            // Kemas kini posisi visual kursor jari telunjuk
+            cursorEl.style.left = `${state.cursorX}px`;
+            cursorEl.style.top = `${state.cursorY}px`;
+
+            // Jika dalam mod kamera dan tangan tidak dikesan, pudarkan sedikit kursor
+            if (state.inputMode === 'camera' && !state.handDetected) {
+                cursorEl.style.opacity = '0.35';
+                resetHoverState();
+                requestAnimationFrame(gameInteractionLoop);
+                return;
+            } else {
+                cursorEl.style.opacity = '1';
+            }
+
+            if (!state.isTransitioning) {
+                // Semak sama ada koordinat kursor berada di dalam mana-mana kotak jawapan
+                let detectedBoxIdx = -1;
+                for (let i = 0; i < 4; i++) {
+                    const card = document.getElementById(`card-${i}`);
+                    const rect = card.getBoundingClientRect();
+                    if (
+                        state.cursorX >= rect.left &&
+                        state.cursorX <= rect.right &&
+                        state.cursorY >= rect.top &&
+                        state.cursorY <= rect.bottom
+                    ) {
+                        detectedBoxIdx = i;
+                        break;
+                    }
+                }
+
+                // Abaikan kotak yang sudah pun dipilih (betul atau salah) dalam soalan semasa
+                if (
+                    detectedBoxIdx !== -1 &&
+                    (state.foundCorrectInCurrentQ.has(detectedBoxIdx) || state.wrongTriedInCurrentQ.has(detectedBoxIdx))
+                ) {
+                    detectedBoxIdx = -1;
+                }
+
+                if (detectedBoxIdx !== -1) {
+                    if (state.hoveredIdx !== detectedBoxIdx) {
+                        // Baru memasuki kotak baharu
+                        resetHoverVisualsOnly();
+                        state.hoveredIdx = detectedBoxIdx;
+                        state.dwellElapsedMs = 0;
+                        document.getElementById(`card-${detectedBoxIdx}`).classList.add('hovered');
+                        audio.playHoverStart();
+                    } else {
+                        // Kekal menahan jari di atas kotak yang sama
+                        state.dwellElapsedMs += deltaMs;
+                        const progressRatio = Math.min(1, state.dwellElapsedMs / state.dwellRequiredMs);
+
+                        // Kemas kini gelang kemajuan SVG pada kursor
+                        const offset = CIRCLE_CIRCUMFERENCE * (1 - progressRatio);
+                        dwellCircleEl.style.strokeDashoffset = offset;
+
+                        // Kemas kini bar kemajuan bawah kad
+                        const card = document.getElementById(`card-${detectedBoxIdx}`);
+                        card.querySelector('.box-progress-bar').style.width = `${progressRatio * 100}%`;
+
+                        // Apabila masa menahan mencapai 1.5 saat (1500ms) -> Kunci Pilihan!
+                        if (state.dwellElapsedMs >= state.dwellRequiredMs) {
+                            const chosenIdx = detectedBoxIdx;
+                            resetHoverState();
+                            evaluateAnswerSelection(chosenIdx);
+                        }
+                    }
+                } else {
+                    resetHoverState();
+                }
+            }
+
+            requestAnimationFrame(gameInteractionLoop);
+        }
+
+        function resetHoverVisualsOnly() {
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`card-${i}`);
+                card.classList.remove('hovered');
+                if (!state.foundCorrectInCurrentQ.has(i)) {
+                    card.querySelector('.box-progress-bar').style.width = '0%';
+                }
+            }
+            dwellCircleEl.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE;
+        }
+
+        function resetHoverState() {
+            state.hoveredIdx = -1;
+            state.dwellElapsedMs = 0;
+            resetHoverVisualsOnly();
+        }
+
+        /**
+         * PENILAIAN JAWAPAN APABILA PILIHAN DIKUNCI
+         */
+        function evaluateAnswerSelection(selectedIdx) {
+            if (state.isTransitioning) return;
+
+            const currentQ = QUESTIONS_DATA[state.currentQIndex];
+            const card = document.getElementById(`card-${selectedIdx}`);
+            const statusIcon = card.querySelector('.status-icon');
+            const isCorrect = currentQ.correctIndices.includes(selectedIdx);
+
+            if (isCorrect) {
+                // JAWAPAN BETUL
+                state.foundCorrectInCurrentQ.add(selectedIdx);
+                state.totalCorrectHits += 1;
+                state.score += 100;
+                updateScoreDisplay();
+
+                // Tukar kotak menjadi HIJAU dengan animasi bercahaya (glowing pulse) & tanda semak
+                card.classList.remove('hovered');
+                card.classList.add('correct-state');
+                card.querySelector('.box-progress-bar').style.width = '100%';
+                statusIcon.textContent = '✅';
+                statusIcon.classList.remove('hidden');
+
+                audio.playSuccessChime();
+
+                const foundCount = state.foundCorrectInCurrentQ.size;
+                renderMultiProgressDots(currentQ.requiredCount, foundCount);
+
+                // Semak sama ada semua jawapan yang diperlukan untuk soalan ini telah ditemui
+                if (foundCount >= currentQ.requiredCount) {
+                    state.isTransitioning = true;
+                    showFloatingFeedback("🌟 Cemerlang! Semua jawapan tepat ditemui!", "text-emerald-300 border-emerald-400");
+
+                    // Bergerak ke soalan seterusnya selepas 1.6 saat
+                    setTimeout(() => {
+                        if (state.currentQIndex + 1 < QUESTIONS_DATA.length) {
+                            state.currentQIndex += 1;
+                            loadQuestion(state.currentQIndex);
+                        } else {
+                            finishGame();
+                        }
+                    }, 1650);
+                } else {
+                    // Masih perlu 1 lagi jawapan benar
+                    const remaining = currentQ.requiredCount - foundCount;
+                    showFloatingFeedback(`✨ Tepat! Pilih ${remaining} lagi jawapan yang betul!`, "text-amber-300 border-amber-400");
+                }
+
+            } else {
+                // JAWAPAN SALAH
+                state.wrongTriedInCurrentQ.add(selectedIdx);
+                state.totalWrongAttempts += 1;
+                state.score = Math.max(0, state.score - 25); // Penalti kecil
+                updateScoreDisplay();
+
+                // Tukar kotak menjadi MERAH dengan animasi gegaran (shake) & tanda pangkah
+                card.classList.remove('hovered');
+                card.classList.add('wrong-state');
+                statusIcon.textContent = '❌';
+                statusIcon.classList.remove('hidden');
+
+                audio.playErrorBuzz();
+                showFloatingFeedback("⚠️ Kurang tepat (-25 markah). Cuba pilihan lain!", "text-rose-300 border-rose-400");
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('hud-score').textContent = state.score;
+        }
+
+        function showFloatingFeedback(message, colorClasses) {
+            const el = document.getElementById('floating-feedback');
+            el.textContent = message;
+            el.className = `px-6 py-2.5 rounded-full bg-slate-950/90 backdrop-blur-md border text-sm sm:text-base font-extrabold shadow-2xl animate-pop-in ${colorClasses}`;
+            el.classList.remove('hidden');
+        }
+
+        /**
+         * SKRIN TAMAT PERMAINAN & RINGKASAN NOTA ULANG KAJI
+         */
+        function finishGame() {
+            state.isPlaying = false;
+            state.isTransitioning = false;
+            cursorEl.classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('btn-toggle-input').classList.add('hidden');
+            document.getElementById('screen-end').classList.remove('hidden');
+
+            audio.playVictoryFanfare();
+
+            // Kira jumlah jawapan benar keseluruhan (12 jawapan merentas 7 soalan)
+            const totalRequiredAnswers = QUESTIONS_DATA.reduce((sum, q) => sum + q.requiredCount, 0);
+            const totalAttempts = state.totalCorrectHits + state.totalWrongAttempts;
+            const accuracy = totalAttempts > 0 
+                ? Math.round((state.totalCorrectHits / totalAttempts) * 100) 
+                : 100;
+
+            document.getElementById('end-total-score').textContent = state.score;
+            document.getElementById('end-accuracy').textContent = `${accuracy}%`;
+            document.getElementById('end-correct-ratio').textContent = `${state.totalCorrectHits} / ${totalRequiredAnswers}`;
+
+            // Tentukan Pangkat Pencapaian
+            const rankTitleEl = document.getElementById('end-rank-title');
+            const rankDescEl = document.getElementById('end-rank-desc');
+
+            if (accuracy >= 85) {
+                rankTitleEl.textContent = "Cendekiawan Agung Baitul Hikmah";
+                rankDescEl.textContent = "Luar biasa! Penguasaan anda terhadap sejarah dan sumbangan khalifah Kerajaan Abbasiyah sangat cemerlang.";
+            } else if (accuracy >= 60) {
+                rankTitleEl.textContent = "Sarjana Muda Kota Baghdad";
+                rankDescEl.textContent = "Syabas! Anda memahami fakta-fakta penting kegemilangan Kerajaan Abbasiyah dengan baik.";
+            } else {
+                rankTitleEl.textContent = "Penuntut Ilmu Abbasiyah";
+                rankDescEl.textContent = "Usaha yang baik! Semak nota ulang kaji di bawah dan cuba lagi untuk meraih skor tertinggi.";
+            }
+
+            // Jana Senarai Ringkas Nota Ulang Kaji Semua 7 Soalan
+            const listContainer = document.getElementById('revision-notes-list');
+            listContainer.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D'];
+
+            QUESTIONS_DATA.forEach((q) => {
+                const correctTexts = q.correctIndices.map(idx => `<strong>(${letters[idx]})</strong> ${q.options[idx]}`).join(' <span class="text-amber-400">&bull;</span> ');
+                const item = document.createElement('div');
+                item.className = "p-3.5 rounded-2xl bg-slate-950/80 border border-emerald-500/25";
+                item.innerHTML = `
+                    <div class="text-xs font-extrabold text-amber-300 mb-1">Soalan ${q.id}: ${q.question}</div>
+                    <div class="text-xs sm:text-sm text-emerald-200 leading-relaxed">✅ ${correctTexts}</div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
